@@ -1,496 +1,314 @@
-<div align="center">
-  <p>
-    <a align="center" href="https://ultralytics.com/yolov5" target="_blank">
-      <img width="100%" src="https://raw.githubusercontent.com/ultralytics/assets/main/yolov5/v70/splash.png"></a>
-  </p>
+# 手把手教你使用YOLOV5训练自己的目标检测模型
 
-[English](README.md) | [简体中文](README.zh-CN.md)
-<br>
+大家好，这里是肆十二（dejahu），好几个月没有更新了，这两天看了一下关注量，突然多了1k多个朋友关注，想必都是大作业系列教程来的小伙伴。既然有这么多朋友关注这个大作业系列，并且也差不多到了毕设开题和大作业提交的时间了，那我直接就是一波更新。这期的内容相对于上期的果蔬分类和垃圾识别无论是在内容还是新意上我们都进行了船新的升级，我们这次要使用YOLOV5来训练一个口罩检测模型，比较契合当下的疫情，并且目标检测涉及到的知识点也比较多，这次的内容除了可以作为大家的大作业之外，也可以作为一些小伙伴的毕业设计。废话不多说，我们直接开始今天的内容。
 
-<div>
-    <a href="https://github.com/ultralytics/yolov5/actions/workflows/ci-testing.yml"><img src="https://github.com/ultralytics/yolov5/actions/workflows/ci-testing.yml/badge.svg" alt="YOLOv5 CI"></a>
-    <a href="https://zenodo.org/badge/latestdoi/264818686"><img src="https://zenodo.org/badge/264818686.svg" alt="YOLOv5 Citation"></a>
-    <a href="https://hub.docker.com/r/ultralytics/yolov5"><img src="https://img.shields.io/docker/pulls/ultralytics/yolov5?logo=docker" alt="Docker Pulls"></a>
-    <br>
-    <a href="https://bit.ly/yolov5-paperspace-notebook"><img src="https://assets.paperspace.io/img/gradient-badge.svg" alt="Run on Gradient"></a>
-    <a href="https://colab.research.google.com/github/ultralytics/yolov5/blob/master/tutorial.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
-    <a href="https://www.kaggle.com/ultralytics/yolov5"><img src="https://kaggle.com/static/images/open-in-kaggle.svg" alt="Open In Kaggle"></a>
-  </div>
-  <br>
+> B站讲解视频：[手把手教你使用YOLOV5训练自己的目标检测模型_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1YL4y1J7xz)
+>
+> CSDN博客：[手把手教你使用YOLOV5训练自己的目标检测模型-口罩检测-视频教程_dejahu的博客-CSDN博客](https://blog.csdn.net/ECHOSON/article/details/121939535)
+>
+> 代码地址：[YOLOV5-mask-42: 基于YOLOV5的口罩检测系统-提供教学视频 (gitee.com)](https://gitee.com/song-laogou/yolov5-mask-42)
+>
+> 处理好的数据集和训练好的模型：[YOLOV5口罩检测数据集+代码+模型2000张标注好的数据+教学视频.zip-深度学习文档类资源-CSDN文库](https://download.csdn.net/download/ECHOSON/63290559)
+>
+> 更多相关的数据集：[目标检测数据集清单-附赠YOLOV5模型训练和使用教程_dejahu的博客-CSDN博客](https://blog.csdn.net/ECHOSON/article/details/121892887)
 
-YOLOv5 🚀 is the world's most loved vision AI, representing <a href="https://ultralytics.com">Ultralytics</a> open-source research into future vision AI methods, incorporating lessons learned and best practices evolved over thousands of hours of research and development.
+先来看看我们要实现的效果，我们将会通过数据来训练一个口罩检测的模型，并用pyqt5进行封装，实现图片口罩检测、视频口罩检测和摄像头实时口罩检测的功能。
 
-We hope that the resources here will help you get the most out of YOLOv5. Please browse the YOLOv5 <a href="https://docs.ultralytics.com/yolov5">Docs</a> for details, raise an issue on <a href="https://github.com/ultralytics/yolov5/issues/new/choose">GitHub</a> for support, and join our <a href="https://discord.gg/n6cFeSPZdD">Discord</a> community for questions and discussions!
+![image-20211212181048969](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20211212181048969.png)
 
-To request an Enterprise License please complete the form at [Ultralytics Licensing](https://ultralytics.com/license).
+![image-20211212194124635](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20211212194124635.png)
 
-<div align="center">
-  <a href="https://github.com/ultralytics" style="text-decoration:none;">
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-github.png" width="2%" alt="" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="" />
-  <a href="https://www.linkedin.com/company/ultralytics/" style="text-decoration:none;">
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-linkedin.png" width="2%" alt="" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="" />
-  <a href="https://twitter.com/ultralytics" style="text-decoration:none;">
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-twitter.png" width="2%" alt="" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="" />
-  <a href="https://youtube.com/ultralytics" style="text-decoration:none;">
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-youtube.png" width="2%" alt="" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="" />
-  <a href="https://www.tiktok.com/@ultralytics" style="text-decoration:none;">
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-tiktok.png" width="2%" alt="" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="" />
-  <a href="https://www.instagram.com/ultralytics/" style="text-decoration:none;">
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-instagram.png" width="2%" alt="" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="" />
-  <a href="https://discord.gg/n6cFeSPZdD" style="text-decoration:none;">
-    <img src="https://github.com/ultralytics/assets/blob/main/social/logo-social-discord.png" width="2%" alt="" /></a>
-</div>
+## 下载代码
 
-</div>
-<br>
+代码的下载地址是：[[YOLOV5-mask-42: 基于YOLOV5的口罩检测系统-提供教学视频 (gitee.com)](https://gitee.com/song-laogou/yolov5-mask-42)](https://github.com/ultralytics/yolov5)
 
-## <div align="center">YOLOv8 🚀 NEW</div>
+![image-20211214191424378](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20211214191424378.png)
 
-We are thrilled to announce the launch of Ultralytics YOLOv8 🚀, our NEW cutting-edge, state-of-the-art (SOTA) model
-released at **[https://github.com/ultralytics/ultralytics](https://github.com/ultralytics/ultralytics)**.
-YOLOv8 is designed to be fast, accurate, and easy to use, making it an excellent choice for a wide range of
-object detection, image segmentation and image classification tasks.
+## 配置环境
 
-See the [YOLOv8 Docs](https://docs.ultralytics.com) for details and get started with:
+不熟悉pycharm的anaconda的小伙伴请先看这篇csdn博客，了解pycharm和anaconda的基本操作
 
-```commandline
-pip install ultralytics
-```
+[如何在pycharm中配置anaconda的虚拟环境_dejahu的博客-CSDN博客_如何在pycharm中配置anaconda](https://blog.csdn.net/ECHOSON/article/details/117220445)
 
-<div align="center">
-  <a href="https://ultralytics.com/yolov8" target="_blank">
-  <img width="100%" src="https://raw.githubusercontent.com/ultralytics/assets/main/yolov8/yolo-comparison-plots.png"></a>
-</div>
-
-## <div align="center">Documentation</div>
-
-See the [YOLOv5 Docs](https://docs.ultralytics.com/yolov5) for full documentation on training, testing and deployment. See below for quickstart examples.
-
-<details open>
-<summary>Install</summary>
-
-Clone repo and install [requirements.txt](https://github.com/ultralytics/yolov5/blob/master/requirements.txt) in a
-[**Python>=3.7.0**](https://www.python.org/) environment, including
-[**PyTorch>=1.7**](https://pytorch.org/get-started/locally/).
+anaconda安装完成之后请切换到国内的源来提高下载速度 ，命令如下：
 
 ```bash
-git clone https://github.com/ultralytics/yolov5  # clone
-cd yolov5
-pip install -r requirements.txt  # install
+conda config --remove-key channels
+conda config --add channels https://mirrors.ustc.edu.cn/anaconda/pkgs/main/
+conda config --add channels https://mirrors.ustc.edu.cn/anaconda/pkgs/free/
+conda config --add channels https://mirrors.bfsu.edu.cn/anaconda/cloud/pytorch/
+conda config --set show_channel_urls yes
+pip config set global.index-url https://mirrors.ustc.edu.cn/pypi/web/simple
 ```
 
-</details>
 
-<details>
-<summary>Inference</summary>
 
-YOLOv5 [PyTorch Hub](https://docs.ultralytics.com/yolov5/tutorials/pytorch_hub_model_loading) inference. [Models](https://github.com/ultralytics/yolov5/tree/master/models) download automatically from the latest
-YOLOv5 [release](https://github.com/ultralytics/yolov5/releases).
-
-```python
-import torch
-
-# Model
-model = torch.hub.load("ultralytics/yolov5", "yolov5s")  # or yolov5n - yolov5x6, custom
-
-# Images
-img = "https://ultralytics.com/images/zidane.jpg"  # or file, Path, PIL, OpenCV, numpy, list
-
-# Inference
-results = model(img)
-
-# Results
-results.print()  # or .show(), .save(), .crop(), .pandas(), etc.
-```
-
-</details>
-
-<details>
-<summary>Inference with detect.py</summary>
-
-`detect.py` runs inference on a variety of sources, downloading [models](https://github.com/ultralytics/yolov5/tree/master/models) automatically from
-the latest YOLOv5 [release](https://github.com/ultralytics/yolov5/releases) and saving results to `runs/detect`.
+首先创建python3.8的虚拟环境，请在命令行中执行下列操作：
 
 ```bash
-python detect.py --weights yolov5s.pt --source 0                               # webcam
-                                               img.jpg                         # image
-                                               vid.mp4                         # video
-                                               screen                          # screenshot
-                                               path/                           # directory
-                                               list.txt                        # list of images
-                                               list.streams                    # list of streams
-                                               'path/*.jpg'                    # glob
-                                               'https://youtu.be/Zgi9g1ksQHc'  # YouTube
-                                               'rtsp://example.com/media.mp4'  # RTSP, RTMP, HTTP stream
+conda create -n yolo5 python==3.8.5
+conda activate yolo5
 ```
 
-</details>
+### pytorch安装（gpu版本和cpu版本的安装）
 
-<details>
-<summary>Training</summary>
+实际测试情况是YOLOv5在CPU和GPU的情况下均可使用，不过在CPU的条件下训练那个速度会令人发指，所以有条件的小伙伴一定要安装GPU版本的Pytorch，没有条件的小伙伴最好是租服务器来使用。
 
-The commands below reproduce YOLOv5 [COCO](https://github.com/ultralytics/yolov5/blob/master/data/scripts/get_coco.sh)
-results. [Models](https://github.com/ultralytics/yolov5/tree/master/models)
-and [datasets](https://github.com/ultralytics/yolov5/tree/master/data) download automatically from the latest
-YOLOv5 [release](https://github.com/ultralytics/yolov5/releases). Training times for YOLOv5n/s/m/l/x are
-1/2/4/6/8 days on a V100 GPU ([Multi-GPU](https://docs.ultralytics.com/yolov5/tutorials/multi_gpu_training) times faster). Use the
-largest `--batch-size` possible, or pass `--batch-size -1` for
-YOLOv5 [AutoBatch](https://github.com/ultralytics/yolov5/pull/5092). Batch sizes shown for V100-16GB.
+GPU版本安装的具体步骤可以参考这篇文章：[2021年Windows下安装GPU版本的Tensorflow和Pytorch_dejahu的博客-CSDN博客](https://blog.csdn.net/ECHOSON/article/details/118420968)
+
+需要注意以下几点：
+
+* 安装之前一定要先更新你的显卡驱动，去官网下载对应型号的驱动安装
+* 30系显卡只能使用cuda11的版本
+* 一定要创建虚拟环境，这样的话各个深度学习框架之间不发生冲突
+
+我这里创建的是python3.8的环境，安装的Pytorch的版本是1.8.0，命令如下：
+
+```cmd
+conda install pytorch==1.8.0 torchvision torchaudio cudatoolkit=10.2 # 注意这条命令指定Pytorch的版本和cuda的版本
+conda install pytorch==1.8.0 torchvision==0.9.0 torchaudio==0.8.0 cpuonly # CPU的小伙伴直接执行这条命令即可
+```
+
+安装完毕之后，我们来测试一下GPU是否
+
+![image-20210726172454406](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20210726172454406.png)
+
+### pycocotools的安装
+
+<font color='red'>后面我发现了windows下更简单的安装方法，大家可以使用下面这个指令来直接进行安装，不需要下载之后再来安装</font>
+
+```
+pip install pycocotools-windows
+```
+
+### 其他包的安装
+
+另外的话大家还需要安装程序其他所需的包，包括opencv，matplotlib这些包，不过这些包的安装比较简单，直接通过pip指令执行即可，我们cd到yolov5代码的目录下，直接执行下列指令即可完成包的安装。
 
 ```bash
-python train.py --data coco.yaml --epochs 300 --weights '' --cfg yolov5n.yaml  --batch-size 128
-                                                                 yolov5s                    64
-                                                                 yolov5m                    40
-                                                                 yolov5l                    24
-                                                                 yolov5x                    16
+pip install -r requirements.txt
+pip install pyqt5
+pip install labelme
 ```
 
-<img width="800" src="https://user-images.githubusercontent.com/26833433/90222759-949d8800-ddc1-11ea-9fa1-1c97eed2b963.png">
+### 测试一下
 
-</details>
-
-<details open>
-<summary>Tutorials</summary>
-
-- [Train Custom Data](https://docs.ultralytics.com/yolov5/tutorials/train_custom_data) 🚀 RECOMMENDED
-- [Tips for Best Training Results](https://docs.ultralytics.com/yolov5/tutorials/tips_for_best_training_results) ☘️
-- [Multi-GPU Training](https://docs.ultralytics.com/yolov5/tutorials/multi_gpu_training)
-- [PyTorch Hub](https://docs.ultralytics.com/yolov5/tutorials/pytorch_hub_model_loading) 🌟 NEW
-- [TFLite, ONNX, CoreML, TensorRT Export](https://docs.ultralytics.com/yolov5/tutorials/model_export) 🚀
-- [NVIDIA Jetson platform Deployment](https://docs.ultralytics.com/yolov5/tutorials/running_on_jetson_nano) 🌟 NEW
-- [Test-Time Augmentation (TTA)](https://docs.ultralytics.com/yolov5/tutorials/test_time_augmentation)
-- [Model Ensembling](https://docs.ultralytics.com/yolov5/tutorials/model_ensembling)
-- [Model Pruning/Sparsity](https://docs.ultralytics.com/yolov5/tutorials/model_pruning_and_sparsity)
-- [Hyperparameter Evolution](https://docs.ultralytics.com/yolov5/tutorials/hyperparameter_evolution)
-- [Transfer Learning with Frozen Layers](https://docs.ultralytics.com/yolov5/tutorials/transfer_learning_with_frozen_layers)
-- [Architecture Summary](https://docs.ultralytics.com/yolov5/tutorials/architecture_description) 🌟 NEW
-- [Roboflow for Datasets, Labeling, and Active Learning](https://docs.ultralytics.com/yolov5/tutorials/roboflow_datasets_integration)
-- [ClearML Logging](https://docs.ultralytics.com/yolov5/tutorials/clearml_logging_integration) 🌟 NEW
-- [YOLOv5 with Neural Magic's Deepsparse](https://docs.ultralytics.com/yolov5/tutorials/neural_magic_pruning_quantization) 🌟 NEW
-- [Comet Logging](https://docs.ultralytics.com/yolov5/tutorials/comet_logging_integration) 🌟 NEW
-
-</details>
-
-## <div align="center">Integrations</div>
-
-<br>
-<a align="center" href="https://bit.ly/ultralytics_hub" target="_blank">
-<img width="100%" src="https://github.com/ultralytics/assets/raw/main/im/integrations-loop.png"></a>
-<br>
-<br>
-
-<div align="center">
-  <a href="https://roboflow.com/?ref=ultralytics">
-    <img src="https://github.com/ultralytics/assets/raw/main/partners/logo-roboflow.png" width="10%" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="15%" height="0" alt="" />
-  <a href="https://cutt.ly/yolov5-readme-clearml">
-    <img src="https://github.com/ultralytics/assets/raw/main/partners/logo-clearml.png" width="10%" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="15%" height="0" alt="" />
-  <a href="https://bit.ly/yolov5-readme-comet2">
-    <img src="https://github.com/ultralytics/assets/raw/main/partners/logo-comet.png" width="10%" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="15%" height="0" alt="" />
-  <a href="https://bit.ly/yolov5-neuralmagic">
-    <img src="https://github.com/ultralytics/assets/raw/main/partners/logo-neuralmagic.png" width="10%" /></a>
-</div>
-
-|                                                           Roboflow                                                           |                                                            ClearML ⭐ NEW                                                            |                                                                        Comet ⭐ NEW                                                                         |                                           Neural Magic ⭐ NEW                                           |
-| :--------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------: |
-| Label and export your custom datasets directly to YOLOv5 for training with [Roboflow](https://roboflow.com/?ref=ultralytics) | Automatically track, visualize and even remotely train YOLOv5 using [ClearML](https://cutt.ly/yolov5-readme-clearml) (open-source!) | Free forever, [Comet](https://bit.ly/yolov5-readme-comet2) lets you save YOLOv5 models, resume training, and interactively visualise and debug predictions | Run YOLOv5 inference up to 6x faster with [Neural Magic DeepSparse](https://bit.ly/yolov5-neuralmagic) |
-
-## <div align="center">Ultralytics HUB</div>
-
-Experience seamless AI with [Ultralytics HUB](https://bit.ly/ultralytics_hub) ⭐, the all-in-one solution for data visualization, YOLOv5 and YOLOv8 🚀 model training and deployment, without any coding. Transform images into actionable insights and bring your AI visions to life with ease using our cutting-edge platform and user-friendly [Ultralytics App](https://ultralytics.com/app_install). Start your journey for **Free** now!
-
-<a align="center" href="https://bit.ly/ultralytics_hub" target="_blank">
-<img width="100%" src="https://github.com/ultralytics/assets/raw/main/im/ultralytics-hub.png"></a>
-
-## <div align="center">Why YOLOv5</div>
-
-YOLOv5 has been designed to be super easy to get started and simple to learn. We prioritize real-world results.
-
-<p align="left"><img width="800" src="https://user-images.githubusercontent.com/26833433/155040763-93c22a27-347c-4e3c-847a-8094621d3f4e.png"></p>
-<details>
-  <summary>YOLOv5-P5 640 Figure</summary>
-
-<p align="left"><img width="800" src="https://user-images.githubusercontent.com/26833433/155040757-ce0934a3-06a6-43dc-a979-2edbbd69ea0e.png"></p>
-</details>
-<details>
-  <summary>Figure Notes</summary>
-
-- **COCO AP val** denotes mAP@0.5:0.95 metric measured on the 5000-image [COCO val2017](http://cocodataset.org) dataset over various inference sizes from 256 to 1536.
-- **GPU Speed** measures average inference time per image on [COCO val2017](http://cocodataset.org) dataset using a [AWS p3.2xlarge](https://aws.amazon.com/ec2/instance-types/p3/) V100 instance at batch-size 32.
-- **EfficientDet** data from [google/automl](https://github.com/google/automl) at batch size 8.
-- **Reproduce** by `python val.py --task study --data coco.yaml --iou 0.7 --weights yolov5n6.pt yolov5s6.pt yolov5m6.pt yolov5l6.pt yolov5x6.pt`
-
-</details>
-
-### Pretrained Checkpoints
-
-| Model                                                                                           | size<br><sup>(pixels) | mAP<sup>val<br>50-95 | mAP<sup>val<br>50 | Speed<br><sup>CPU b1<br>(ms) | Speed<br><sup>V100 b1<br>(ms) | Speed<br><sup>V100 b32<br>(ms) | params<br><sup>(M) | FLOPs<br><sup>@640 (B) |
-| ----------------------------------------------------------------------------------------------- | --------------------- | -------------------- | ----------------- | ---------------------------- | ----------------------------- | ------------------------------ | ------------------ | ---------------------- |
-| [YOLOv5n](https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5n.pt)              | 640                   | 28.0                 | 45.7              | **45**                       | **6.3**                       | **0.6**                        | **1.9**            | **4.5**                |
-| [YOLOv5s](https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5s.pt)              | 640                   | 37.4                 | 56.8              | 98                           | 6.4                           | 0.9                            | 7.2                | 16.5                   |
-| [YOLOv5m](https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5m.pt)              | 640                   | 45.4                 | 64.1              | 224                          | 8.2                           | 1.7                            | 21.2               | 49.0                   |
-| [YOLOv5l](https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5l.pt)              | 640                   | 49.0                 | 67.3              | 430                          | 10.1                          | 2.7                            | 46.5               | 109.1                  |
-| [YOLOv5x](https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5x.pt)              | 640                   | 50.7                 | 68.9              | 766                          | 12.1                          | 4.8                            | 86.7               | 205.7                  |
-|                                                                                                 |                       |                      |                   |                              |                               |                                |                    |                        |
-| [YOLOv5n6](https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5n6.pt)            | 1280                  | 36.0                 | 54.4              | 153                          | 8.1                           | 2.1                            | 3.2                | 4.6                    |
-| [YOLOv5s6](https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5s6.pt)            | 1280                  | 44.8                 | 63.7              | 385                          | 8.2                           | 3.6                            | 12.6               | 16.8                   |
-| [YOLOv5m6](https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5m6.pt)            | 1280                  | 51.3                 | 69.3              | 887                          | 11.1                          | 6.8                            | 35.7               | 50.0                   |
-| [YOLOv5l6](https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5l6.pt)            | 1280                  | 53.7                 | 71.3              | 1784                         | 15.8                          | 10.5                           | 76.8               | 111.4                  |
-| [YOLOv5x6](https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5x6.pt)<br>+ [TTA] | 1280<br>1536          | 55.0<br>**55.8**     | 72.7<br>**72.7**  | 3136<br>-                    | 26.2<br>-                     | 19.4<br>-                      | 140.7<br>-         | 209.8<br>-             |
-
-<details>
-  <summary>Table Notes</summary>
-
-- All checkpoints are trained to 300 epochs with default settings. Nano and Small models use [hyp.scratch-low.yaml](https://github.com/ultralytics/yolov5/blob/master/data/hyps/hyp.scratch-low.yaml) hyps, all others use [hyp.scratch-high.yaml](https://github.com/ultralytics/yolov5/blob/master/data/hyps/hyp.scratch-high.yaml).
-- **mAP<sup>val</sup>** values are for single-model single-scale on [COCO val2017](http://cocodataset.org) dataset.<br>Reproduce by `python val.py --data coco.yaml --img 640 --conf 0.001 --iou 0.65`
-- **Speed** averaged over COCO val images using a [AWS p3.2xlarge](https://aws.amazon.com/ec2/instance-types/p3/) instance. NMS times (~1 ms/img) not included.<br>Reproduce by `python val.py --data coco.yaml --img 640 --task speed --batch 1`
-- **TTA** [Test Time Augmentation](https://docs.ultralytics.com/yolov5/tutorials/test_time_augmentation) includes reflection and scale augmentations.<br>Reproduce by `python val.py --data coco.yaml --img 1536 --iou 0.7 --augment`
-
-</details>
-
-## <div align="center">Segmentation</div>
-
-Our new YOLOv5 [release v7.0](https://github.com/ultralytics/yolov5/releases/v7.0) instance segmentation models are the fastest and most accurate in the world, beating all current [SOTA benchmarks](https://paperswithcode.com/sota/real-time-instance-segmentation-on-mscoco). We've made them super simple to train, validate and deploy. See full details in our [Release Notes](https://github.com/ultralytics/yolov5/releases/v7.0) and visit our [YOLOv5 Segmentation Colab Notebook](https://github.com/ultralytics/yolov5/blob/master/segment/tutorial.ipynb) for quickstart tutorials.
-
-<details>
-  <summary>Segmentation Checkpoints</summary>
-
-<div align="center">
-<a align="center" href="https://ultralytics.com/yolov5" target="_blank">
-<img width="800" src="https://user-images.githubusercontent.com/61612323/204180385-84f3aca9-a5e9-43d8-a617-dda7ca12e54a.png"></a>
-</div>
-
-We trained YOLOv5 segmentations models on COCO for 300 epochs at image size 640 using A100 GPUs. We exported all models to ONNX FP32 for CPU speed tests and to TensorRT FP16 for GPU speed tests. We ran all speed tests on Google [Colab Pro](https://colab.research.google.com/signup) notebooks for easy reproducibility.
-
-| Model                                                                                      | size<br><sup>(pixels) | mAP<sup>box<br>50-95 | mAP<sup>mask<br>50-95 | Train time<br><sup>300 epochs<br>A100 (hours) | Speed<br><sup>ONNX CPU<br>(ms) | Speed<br><sup>TRT A100<br>(ms) | params<br><sup>(M) | FLOPs<br><sup>@640 (B) |
-| ------------------------------------------------------------------------------------------ | --------------------- | -------------------- | --------------------- | --------------------------------------------- | ------------------------------ | ------------------------------ | ------------------ | ---------------------- |
-| [YOLOv5n-seg](https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5n-seg.pt) | 640                   | 27.6                 | 23.4                  | 80:17                                         | **62.7**                       | **1.2**                        | **2.0**            | **7.1**                |
-| [YOLOv5s-seg](https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5s-seg.pt) | 640                   | 37.6                 | 31.7                  | 88:16                                         | 173.3                          | 1.4                            | 7.6                | 26.4                   |
-| [YOLOv5m-seg](https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5m-seg.pt) | 640                   | 45.0                 | 37.1                  | 108:36                                        | 427.0                          | 2.2                            | 22.0               | 70.8                   |
-| [YOLOv5l-seg](https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5l-seg.pt) | 640                   | 49.0                 | 39.9                  | 66:43 (2x)                                    | 857.4                          | 2.9                            | 47.9               | 147.7                  |
-| [YOLOv5x-seg](https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5x-seg.pt) | 640                   | **50.7**             | **41.4**              | 62:56 (3x)                                    | 1579.2                         | 4.5                            | 88.8               | 265.7                  |
-
-- All checkpoints are trained to 300 epochs with SGD optimizer with `lr0=0.01` and `weight_decay=5e-5` at image size 640 and all default settings.<br>Runs logged to https://wandb.ai/glenn-jocher/YOLOv5_v70_official
-- **Accuracy** values are for single-model single-scale on COCO dataset.<br>Reproduce by `python segment/val.py --data coco.yaml --weights yolov5s-seg.pt`
-- **Speed** averaged over 100 inference images using a [Colab Pro](https://colab.research.google.com/signup) A100 High-RAM instance. Values indicate inference speed only (NMS adds about 1ms per image). <br>Reproduce by `python segment/val.py --data coco.yaml --weights yolov5s-seg.pt --batch 1`
-- **Export** to ONNX at FP32 and TensorRT at FP16 done with `export.py`. <br>Reproduce by `python export.py --weights yolov5s-seg.pt --include engine --device 0 --half`
-
-</details>
-
-<details>
-  <summary>Segmentation Usage Examples &nbsp;<a href="https://colab.research.google.com/github/ultralytics/yolov5/blob/master/segment/tutorial.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a></summary>
-
-### Train
-
-YOLOv5 segmentation training supports auto-download COCO128-seg segmentation dataset with `--data coco128-seg.yaml` argument and manual download of COCO-segments dataset with `bash data/scripts/get_coco.sh --train --val --segments` and then `python train.py --data coco.yaml`.
+在yolov5目录下执行下列代码
 
 ```bash
-# Single-GPU
-python segment/train.py --data coco128-seg.yaml --weights yolov5s-seg.pt --img 640
-
-# Multi-GPU DDP
-python -m torch.distributed.run --nproc_per_node 4 --master_port 1 segment/train.py --data coco128-seg.yaml --weights yolov5s-seg.pt --img 640 --device 0,1,2,3
+python detect.py --source data/images/bus.jpg --weights pretrained/yolov5s.pt
 ```
 
-### Val
+执行完毕之后将会输出下列信息
 
-Validate YOLOv5s-seg mask mAP on COCO dataset:
+![image-20210610111308496](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20210610111308496.png)
+
+在runs目录下可以找到检测之后的结果
+
+![image-20210610111426144](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20210610111426144.png)
+
+按照官方给出的指令，这里的检测代码功能十分强大，是支持对多种图像和视频流进行检测的，具体的使用方法如下：
 
 ```bash
-bash data/scripts/get_coco.sh --val --segments  # download COCO val segments split (780MB, 5000 images)
-python segment/val.py --weights yolov5s-seg.pt --data coco.yaml --img 640  # validate
+ python detect.py --source 0  # webcam
+                            file.jpg  # image 
+                            file.mp4  # video
+                            path/  # directory
+                            path/*.jpg  # glob
+                            'https://youtu.be/NUsoVlDFqZg'  # YouTube video
+                            'rtsp://example.com/media.mp4'  # RTSP, RTMP, HTTP stream
 ```
 
-### Predict
 
-Use pretrained YOLOv5m-seg.pt to predict bus.jpg:
+
+## 数据处理
+
+这里改成yolo的标注形式，之后专门出一期数据转换的内容。
+
+数据标注这里推荐的软件是labelimg，通过pip指令即可安装
+
+在你的虚拟环境下执行`pip install labelimg  -i https://mirror.baidu.com/pypi/simple`命令进行安装，然后在命令行中直接执行labelimg软件即可启动数据标注软件。
+
+![image-20210609172156067](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20210609172156067.png)
+
+软件启动后的界面如下：
+
+![image-20210609172557286](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20210609172557286.png)
+
+### 数据标注
+
+虽然是yolo的模型训练，但是这里我们还是选择进行voc格式的标注，一是方便在其他的代码中使用数据集，二是我提供了数据格式转化
+
+**标注的过程是：**
+
+**1.打开图片目录**
+
+![image-20210610004158135](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20210610004158135.png)
+
+**2.设置标注文件保存的目录并设置自动保存**
+
+![image-20210610004215206](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20210610004215206.png)
+
+**3.开始标注，画框，标记目标的label，`crtl+s`保存，然后d切换到下一张继续标注，不断重复重复**
+
+![image-20211212201302682](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20211212201302682.png)
+
+labelimg的快捷键如下，学会快捷键可以帮助你提高数据标注的效率。
+
+![image-20210609171855504](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20210609171855504.png)
+
+标注完成之后你会得到一系列的txt文件，这里的txt文件就是目标检测的标注文件，其中txt文件和图片文件的名称是一一对应的，如下图所示：
+
+![image-20211212170509714](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20211212170509714.png)
+
+打开具体的标注文件，你将会看到下面的内容，txt文件中每一行表示一个目标，以空格进行区分，分别表示目标的类别id，归一化处理之后的中心点x坐标、y坐标、目标框的w和h。
+
+![image-20211212170853677](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20211212170853677.png)
+
+**4.修改数据集配置文件**
+
+标记完成的数据请按照下面的格式进行放置，方便程序进行索引。
 
 ```bash
-python segment/predict.py --weights yolov5m-seg.pt --source data/images/bus.jpg
+YOLO_Mask
+└─ score
+       ├─ images
+       │    ├─ test # 下面放测试集图片
+       │    ├─ train # 下面放训练集图片
+       │    └─ val # 下面放验证集图片
+       └─ labels
+              ├─ test # 下面放测试集标签
+              ├─ train # 下面放训练集标签
+              ├─ val # 下面放验证集标签
 ```
 
-```python
-model = torch.hub.load(
-    "ultralytics/yolov5", "custom", "yolov5m-seg.pt"
-)  # load from PyTorch Hub (WARNING: inference not yet supported)
+这里的配置文件是为了方便我们后期训练使用，我们需要在data目录下创建一个`mask_data.yaml`的文件，如下图所示：
+
+![image-20211212174510070](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20211212174510070.png)
+
+到这里，数据集处理部分基本完结撒花了，下面的内容将会是模型训练！
+
+## 模型训练
+
+### 模型的基本训练
+
+在models下建立一个`mask_yolov5s.yaml`的模型配置文件，内容如下：
+
+![image-20211212174749558](C:\Users\chenmingsong\AppData\Roaming\Typora\typora-user-images\image-20211212174749558.png)
+
+模型训练之前，请确保代码目录下有以下文件
+
+![image-20211212174920551](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20211212174920551.png)
+
+执行下列代码运行程序即可：
+
+```
+python train.py --data mask_data.yaml --cfg mask_yolov5s.yaml --weights pretrained/yolov5s.pt --epoch 100 --batch-size 4 --device cpu
 ```
 
-| ![zidane](https://user-images.githubusercontent.com/26833433/203113421-decef4c4-183d-4a0a-a6c2-6435b33bc5d3.jpg) | ![bus](https://user-images.githubusercontent.com/26833433/203113416-11fe0025-69f7-4874-a0a6-65d0bfe2999a.jpg) |
-| ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+![image-20210610113348751](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20210610113348751.png)
 
-### Export
+训练代码成功执行之后会在命令行中输出下列信息，接下来就是安心等待模型训练结束即可。
 
-Export YOLOv5s-seg model to ONNX and TensorRT:
+![image-20210610112655726](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20210610112655726.png)
+
+根据数据集的大小和设备的性能，经过漫长的等待之后模型就训练完了，输出如下：
+
+![image-20210610134412258](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20210610134412258.png)
+
+在`train/runs/exp3`的目录下可以找到训练得到的模型和日志文件
+
+![image-20210610145140340](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20210610145140340.png)
+
+当然还有一些骚操作，比如模型训练到一半可以从中断点继续训练，这些就交给大家下去自行探索喽。
+
+## 模型评估
+
+出了在博客一开头你就能看到的检测效果之外，还有一些学术上的评价指标用来表示我们模型的性能，其中目标检测最常用的评价指标是mAP，mAP是介于0到1之间的一个数字，这个数字越接近于1，就表示你的模型的性能更好。
+
+一般我们会接触到两个指标，分别是召回率recall和精度precision，两个指标p和r都是简单地从一个角度来判断模型的好坏，均是介于0到1之间的数值，其中接近于1表示模型的性能越好，接近于0表示模型的性能越差，为了综合评价目标检测的性能，一般采用均值平均密度map来进一步评估模型的好坏。我们通过设定不同的置信度的阈值，可以得到在模型在不同的阈值下所计算出的p值和r值，一般情况下，p值和r值是负相关的，绘制出来可以得到如下图所示的曲线，其中曲线的面积我们称AP，目标检测模型中每种目标可计算出一个AP值，对所有的AP值求平均则可以得到模型的mAP值，以本文为例，我们可以计算佩戴安全帽和未佩戴安全帽的两个目标的AP值，我们对两组AP值求平均，可以得到整个模型的mAP值，该值越接近1表示模型的性能越好。
+
+关于更加学术的定义大家可以在知乎或者csdn上自行查阅，以我们本次训练的模型为例，在模型结束之后你会找到三张图像，分别表示我们模型在验证集上的召回率、准确率和均值平均密度。
+
+![image-20211212175851524](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20211212175851524.png)
+
+以PR-curve为例，你可以看到我们的模型在验证集上的均值平均密度为0.832。
+
+![PR_curve](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/PR_curve.png)
+
+如果你的目录下没有这样的曲线，可能是因为你的模型训练一半就停止了，没有执行验证的过程，你可以通过下面的命令来生成这些图片。
 
 ```bash
-python export.py --weights yolov5s-seg.pt --include onnx engine --img 640 --device 0
+python val.py --data data/mask_data.yaml --weights runs/train/exp_yolov5s/weights/best.pt --img 640
 ```
 
-</details>
+最后，这里是一张详细的评价指标的解释清单，可以说是最原始的定义了。
 
-## <div align="center">Classification</div>
+![img](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/20200411141530456.png)
 
-YOLOv5 [release v6.2](https://github.com/ultralytics/yolov5/releases) brings support for classification model training, validation and deployment! See full details in our [Release Notes](https://github.com/ultralytics/yolov5/releases/v6.2) and visit our [YOLOv5 Classification Colab Notebook](https://github.com/ultralytics/yolov5/blob/master/classify/tutorial.ipynb) for quickstart tutorials.
+## 模型使用
 
-<details>
-  <summary>Classification Checkpoints</summary>
-
-<br>
-
-We trained YOLOv5-cls classification models on ImageNet for 90 epochs using a 4xA100 instance, and we trained ResNet and EfficientNet models alongside with the same default training settings to compare. We exported all models to ONNX FP32 for CPU speed tests and to TensorRT FP16 for GPU speed tests. We ran all speed tests on Google [Colab Pro](https://colab.research.google.com/signup) for easy reproducibility.
-
-| Model                                                                                              | size<br><sup>(pixels) | acc<br><sup>top1 | acc<br><sup>top5 | Training<br><sup>90 epochs<br>4xA100 (hours) | Speed<br><sup>ONNX CPU<br>(ms) | Speed<br><sup>TensorRT V100<br>(ms) | params<br><sup>(M) | FLOPs<br><sup>@224 (B) |
-| -------------------------------------------------------------------------------------------------- | --------------------- | ---------------- | ---------------- | -------------------------------------------- | ------------------------------ | ----------------------------------- | ------------------ | ---------------------- |
-| [YOLOv5n-cls](https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5n-cls.pt)         | 224                   | 64.6             | 85.4             | 7:59                                         | **3.3**                        | **0.5**                             | **2.5**            | **0.5**                |
-| [YOLOv5s-cls](https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5s-cls.pt)         | 224                   | 71.5             | 90.2             | 8:09                                         | 6.6                            | 0.6                                 | 5.4                | 1.4                    |
-| [YOLOv5m-cls](https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5m-cls.pt)         | 224                   | 75.9             | 92.9             | 10:06                                        | 15.5                           | 0.9                                 | 12.9               | 3.9                    |
-| [YOLOv5l-cls](https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5l-cls.pt)         | 224                   | 78.0             | 94.0             | 11:56                                        | 26.9                           | 1.4                                 | 26.5               | 8.5                    |
-| [YOLOv5x-cls](https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5x-cls.pt)         | 224                   | **79.0**         | **94.4**         | 15:04                                        | 54.3                           | 1.8                                 | 48.1               | 15.9                   |
-|                                                                                                    |                       |                  |                  |                                              |                                |                                     |                    |                        |
-| [ResNet18](https://github.com/ultralytics/yolov5/releases/download/v7.0/resnet18.pt)               | 224                   | 70.3             | 89.5             | **6:47**                                     | 11.2                           | 0.5                                 | 11.7               | 3.7                    |
-| [ResNet34](https://github.com/ultralytics/yolov5/releases/download/v7.0/resnet34.pt)               | 224                   | 73.9             | 91.8             | 8:33                                         | 20.6                           | 0.9                                 | 21.8               | 7.4                    |
-| [ResNet50](https://github.com/ultralytics/yolov5/releases/download/v7.0/resnet50.pt)               | 224                   | 76.8             | 93.4             | 11:10                                        | 23.4                           | 1.0                                 | 25.6               | 8.5                    |
-| [ResNet101](https://github.com/ultralytics/yolov5/releases/download/v7.0/resnet101.pt)             | 224                   | 78.5             | 94.3             | 17:10                                        | 42.1                           | 1.9                                 | 44.5               | 15.9                   |
-|                                                                                                    |                       |                  |                  |                                              |                                |                                     |                    |                        |
-| [EfficientNet_b0](https://github.com/ultralytics/yolov5/releases/download/v7.0/efficientnet_b0.pt) | 224                   | 75.1             | 92.4             | 13:03                                        | 12.5                           | 1.3                                 | 5.3                | 1.0                    |
-| [EfficientNet_b1](https://github.com/ultralytics/yolov5/releases/download/v7.0/efficientnet_b1.pt) | 224                   | 76.4             | 93.2             | 17:04                                        | 14.9                           | 1.6                                 | 7.8                | 1.5                    |
-| [EfficientNet_b2](https://github.com/ultralytics/yolov5/releases/download/v7.0/efficientnet_b2.pt) | 224                   | 76.6             | 93.4             | 17:10                                        | 15.9                           | 1.6                                 | 9.1                | 1.7                    |
-| [EfficientNet_b3](https://github.com/ultralytics/yolov5/releases/download/v7.0/efficientnet_b3.pt) | 224                   | 77.7             | 94.0             | 19:19                                        | 18.9                           | 1.9                                 | 12.2               | 2.4                    |
-
-<details>
-  <summary>Table Notes (click to expand)</summary>
-
-- All checkpoints are trained to 90 epochs with SGD optimizer with `lr0=0.001` and `weight_decay=5e-5` at image size 224 and all default settings.<br>Runs logged to https://wandb.ai/glenn-jocher/YOLOv5-Classifier-v6-2
-- **Accuracy** values are for single-model single-scale on [ImageNet-1k](https://www.image-net.org/index.php) dataset.<br>Reproduce by `python classify/val.py --data ../datasets/imagenet --img 224`
-- **Speed** averaged over 100 inference images using a Google [Colab Pro](https://colab.research.google.com/signup) V100 High-RAM instance.<br>Reproduce by `python classify/val.py --data ../datasets/imagenet --img 224 --batch 1`
-- **Export** to ONNX at FP32 and TensorRT at FP16 done with `export.py`. <br>Reproduce by `python export.py --weights yolov5s-cls.pt --include engine onnx --imgsz 224`
-
-</details>
-</details>
-
-<details>
-  <summary>Classification Usage Examples &nbsp;<a href="https://colab.research.google.com/github/ultralytics/yolov5/blob/master/classify/tutorial.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a></summary>
-
-### Train
-
-YOLOv5 classification training supports auto-download of MNIST, Fashion-MNIST, CIFAR10, CIFAR100, Imagenette, Imagewoof, and ImageNet datasets with the `--data` argument. To start training on MNIST for example use `--data mnist`.
+模型的使用全部集成在了`detect.py`目录下，你按照下面的指令指你要检测的内容即可
 
 ```bash
-# Single-GPU
-python classify/train.py --model yolov5s-cls.pt --data cifar100 --epochs 5 --img 224 --batch 128
-
-# Multi-GPU DDP
-python -m torch.distributed.run --nproc_per_node 4 --master_port 1 classify/train.py --model yolov5s-cls.pt --data imagenet --epochs 5 --img 224 --device 0,1,2,3
+ # 检测摄像头
+ python detect.py  --weights runs/train/exp_yolov5s/weights/best.pt --source 0  # webcam
+ # 检测图片文件
+  python detect.py  --weights runs/train/exp_yolov5s/weights/best.pt --source file.jpg  # image 
+ # 检测视频文件
+   python detect.py --weights runs/train/exp_yolov5s/weights/best.pt --source file.mp4  # video
+ # 检测一个目录下的文件
+  python detect.py --weights runs/train/exp_yolov5s/weights/best.pt path/  # directory
+ # 检测网络视频
+  python detect.py --weights runs/train/exp_yolov5s/weights/best.pt 'https://youtu.be/NUsoVlDFqZg'  # YouTube video
+ # 检测流媒体
+  python detect.py --weights runs/train/exp_yolov5s/weights/best.pt 'rtsp://example.com/media.mp4'  # RTSP, RTMP, HTTP stream                            
 ```
 
-### Val
+比如以我们的口罩模型为例，如果我们执行`python detect.py --weights runs/train/exp_yolov5s/weights/best.pt --source  data/images/fishman.jpg`的命令便可以得到这样的一张检测结果。
 
-Validate YOLOv5m-cls accuracy on ImageNet-1k dataset:
+![fishman](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/fishman.jpg)
 
-```bash
-bash data/scripts/get_imagenet.sh --val  # download ImageNet val split (6.3G, 50000 images)
-python classify/val.py --weights yolov5m-cls.pt --data ../datasets/imagenet --img 224  # validate
-```
+## 构建可视化界面
 
-### Predict
+可视化界面的部分在`window.py`文件中，是通过pyqt5完成的界面设计，在启动界面前，你需要将模型替换成你训练好的模型，替换的位置在`window.py`的第60行，修改成你的模型地址即可，如果你有GPU的话，可以将device设置为0，表示使用第0行GPU，这样可以加快模型的识别速度嗷。
 
-Use pretrained YOLOv5s-cls.pt to predict bus.jpg:
+![image-20211212194547804](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20211212194547804.png)
 
-```bash
-python classify/predict.py --weights yolov5s-cls.pt --source data/images/bus.jpg
-```
+替换之后直接右键run即可启动图形化界面了，快去自己测试一下看看效果吧
 
-```python
-model = torch.hub.load(
-    "ultralytics/yolov5", "custom", "yolov5s-cls.pt"
-)  # load from PyTorch Hub
-```
+![image-20211212194914890](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20211212194914890.png)
 
-### Export
+## 找到我
 
-Export a group of trained YOLOv5s-cls, ResNet and EfficientNet models to ONNX and TensorRT:
+你可以通过这些方式来寻找我。
 
-```bash
-python export.py --weights yolov5s-cls.pt resnet50.pt efficientnet_b0.pt --include onnx engine --img 224
-```
+B站：[肆十二-](https://space.bilibili.com/161240964)
 
-</details>
+CSDN：[肆十二](https://blog.csdn.net/ECHOSON)
 
-## <div align="center">Environments</div>
+知乎：[肆十二 ](https://www.zhihu.com/people/song-chen-ming-28)
 
-Get started in seconds with our verified environments. Click each icon below for details.
+微博：[肆十二-](https://weibo.com/u/5999979327)
 
-<div align="center">
-  <a href="https://bit.ly/yolov5-paperspace-notebook">
-    <img src="https://github.com/ultralytics/yolov5/releases/download/v1.0/logo-gradient.png" width="10%" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="5%" alt="" />
-  <a href="https://colab.research.google.com/github/ultralytics/yolov5/blob/master/tutorial.ipynb">
-    <img src="https://github.com/ultralytics/yolov5/releases/download/v1.0/logo-colab-small.png" width="10%" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="5%" alt="" />
-  <a href="https://www.kaggle.com/ultralytics/yolov5">
-    <img src="https://github.com/ultralytics/yolov5/releases/download/v1.0/logo-kaggle-small.png" width="10%" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="5%" alt="" />
-  <a href="https://hub.docker.com/r/ultralytics/yolov5">
-    <img src="https://github.com/ultralytics/yolov5/releases/download/v1.0/logo-docker-small.png" width="10%" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="5%" alt="" />
-  <a href="https://docs.ultralytics.com/yolov5/environments/aws_quickstart_tutorial/">
-    <img src="https://github.com/ultralytics/yolov5/releases/download/v1.0/logo-aws-small.png" width="10%" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="5%" alt="" />
-  <a href="https://docs.ultralytics.com/yolov5/environments/google_cloud_quickstart_tutorial/">
-    <img src="https://github.com/ultralytics/yolov5/releases/download/v1.0/logo-gcp-small.png" width="10%" /></a>
-</div>
+现在关注以后就是老朋友喽！
 
-## <div align="center">Contribute</div>
+![image-20211212195912911](https://vehicle4cm.oss-cn-beijing.aliyuncs.com/typoraimgs/image-20211212195912911.png)
 
-We love your input! We want to make contributing to YOLOv5 as easy and transparent as possible. Please see our [Contributing Guide](https://docs.ultralytics.com/help/contributing/) to get started, and fill out the [YOLOv5 Survey](https://ultralytics.com/survey?utm_source=github&utm_medium=social&utm_campaign=Survey) to send us feedback on your experiences. Thank you to all our contributors!
 
-<!-- SVG image from https://opencollective.com/ultralytics/contributors.svg?width=990 -->
 
-<a href="https://github.com/ultralytics/yolov5/graphs/contributors">
-<img src="https://github.com/ultralytics/assets/raw/main/im/image-contributors.png" /></a>
 
-## <div align="center">License</div>
 
-YOLOv5 is available under two different licenses:
 
-- **AGPL-3.0 License**: See [LICENSE](https://github.com/ultralytics/yolov5/blob/master/LICENSE) file for details.
-- **Enterprise License**: Provides greater flexibility for commercial product development without the open-source requirements of AGPL-3.0. Typical use cases are embedding Ultralytics software and AI models in commercial products and applications. Request an Enterprise License at [Ultralytics Licensing](https://ultralytics.com/license).
 
-## <div align="center">Contact</div>
 
-For YOLOv5 bug reports and feature requests please visit [GitHub Issues](https://github.com/ultralytics/yolov5/issues), and join our [Discord](https://discord.gg/n6cFeSPZdD) community for questions and discussions!
 
-<br>
-<div align="center">
-  <a href="https://github.com/ultralytics" style="text-decoration:none;">
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-github.png" width="3%" alt="" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="3%" alt="" />
-  <a href="https://www.linkedin.com/company/ultralytics/" style="text-decoration:none;">
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-linkedin.png" width="3%" alt="" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="3%" alt="" />
-  <a href="https://twitter.com/ultralytics" style="text-decoration:none;">
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-twitter.png" width="3%" alt="" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="3%" alt="" />
-  <a href="https://youtube.com/ultralytics" style="text-decoration:none;">
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-youtube.png" width="3%" alt="" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="3%" alt="" />
-  <a href="https://www.tiktok.com/@ultralytics" style="text-decoration:none;">
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-tiktok.png" width="3%" alt="" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="3%" alt="" />
-  <a href="https://www.instagram.com/ultralytics/" style="text-decoration:none;">
-    <img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-instagram.png" width="3%" alt="" /></a>
-  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="3%" alt="" />
-  <a href="https://discord.gg/n6cFeSPZdD" style="text-decoration:none;">
-    <img src="https://github.com/ultralytics/assets/blob/main/social/logo-social-discord.png" width="3%" alt="" /></a>
-</div>
 
-[tta]: https://docs.ultralytics.com/yolov5/tutorials/test_time_augmentation
-# yolov5
+
+
+
+
+
+
+
+# myyolov5002
