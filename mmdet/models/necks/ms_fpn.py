@@ -126,8 +126,7 @@ class MSFPN(nn.Module):
             #这里相当于1X1的卷积来调整通道数
             
             focus_conv = Focus(out_channels, out_channels,k=1,s=1)
-            #这里的输入通道应该填什么还有待考虑
-            #以上的focus结构相当于下采样过程
+            #以上的focus结构相当于下采样过程,将特征图进行大小减半的操作
             jc_convs = ConvModule(
                 4*out_channels,
                 out_channels,
@@ -193,27 +192,30 @@ class MSFPN(nn.Module):
             #这里的i应该从0到4，lateral_convs是4个1x1的卷积层，也就是用来调整通道数的
         ]
 
-        # build top-down path
+        # build down-top path
         used_backbone_levels = len(laterals)
-        #for i in range(used_backbone_levels - 1, 0, -1):
+        for i in range(used_backbone_levels - 1,0,  -1):
             # In some cases, fixing `scale factor` (e.g. 2) is preferred, but
-            #  it cannot co-exist with `size` in `F.interpolate`.
-            
-            #if 'scale_factor' in self.upsample_cfg:
-                #laterals[i - 1] += F.interpolate(laterals[i],
-                                                # **self.upsample_cfg)
-            #else:
-             #   prev_shape = laterals[i - 1].shape[2:]
-              #  laterals[i - 1] += F.interpolate(
-               #     laterals[i], size=prev_shape, **self.upsample_cfg)
-        for i in range(0,used_backbone_levels - 1,  1):
-            # In some cases, fixing `scale factor` (e.g. 2) is preferred, but
-            #  it cannot co-exist with `size` in `F.interpolate`. 
-            
-            laterals[i+1] +=  self.focus_conv[i](laterals[i])
+            #  it cannot co-exist with `size` in `F.interpolate`.  
+            if i==3:
+                laterals[i] +=  self.jc_convs(self.focus_conv[i](laterals[i-2]))
+            if i==2:
+                laterals[i] +=  self.jc_convs(self.focus_conv[i](laterals[i-2]))
 
-        # build outputs
         # part 1: from original levels
+       
+        # build top-down path
+        for i in range(used_backbone_levels - 1, 0, -1):
+            prev_shape = laterals[i - 1].shape[2:]
+            laterals[i - 1] += F.interpolate(
+                laterals[i], size=prev_shape, mode='nearest')
+        for i in range(0, used_backbone_levels - 1,  1):
+            if i==0:
+                prev_shape2= laterals[i].shape[2:]
+                laterals[i] += F.interpolate(laterals[i+3], size=prev_shape2, mode='nearest')
+                laterals[i] += F.interpolate(laterals[i+2], size=prev_shape2, mode='nearest')
+        
+        # build outputs
         outs = [
             self.fpn_convs[i](laterals[i]) for i in range(used_backbone_levels)
         ]
